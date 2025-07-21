@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte de Asignación</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #f8f9fa;
+        }
+        .header {
+            padding: 20px 0;
+            border-bottom: 1px solid #dee2e6;
+            margin-bottom: 30px;
+        }
+        .report-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            padding: 20px;
+        }
+        #map {
+            height: 300px;
+            border-radius: 8px;
+        }
+        .gallery-img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .gallery-img:hover {
+            transform: scale(1.03);
+        }
+        .modal-img {
+            max-width: 100%;
+            max-height: 90vh;
+        }
+        .timeline-item {
+            position: relative;
+            padding-left: 30px;
+            padding-bottom: 20px;
+            border-left: 2px solid #dee2e6;
+            margin-left: 15px;
+        }
+        .timeline-item:last-child {
+            border-left: 2px solid transparent;
+        }
+        .timeline-dot {
+            position: absolute;
+            left: -10px;
+            top: 0;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background-color: #0d6efd;
+        }
+        .badge-high {
+            background-color: #dc3545;
+            color: white;
+        }
+        .badge-medium {
+            background-color: #fd7e14;
+            color: white;
+        }
+        .badge-low {
+            background-color: #20c997;
+            color: white;
+        }
+        .response-time {
+            font-weight: bold;
+        }
+        .response-good {
+            color: #198754;
+        }
+        .response-warning {
+            color: #fd7e14;
+        }
+        .response-critical {
+            color: #dc3545;
+        }
+        .nav-pills .nav-link {
+            color: #6c757d;
+        }
+        .nav-pills .nav-link.active {
+            background-color: #0d6efd;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <a href="/supervisor-panel" class="btn btn-outline-secondary me-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z"/>
+                    </svg>
+                    Volver
+                </a>
+                <h1 class="mb-0">Reporte #<span id="report-id">3</span></h1>
+            </div>
+            <div>
+                <button class="btn btn-outline-primary me-2" onclick="window.print()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M5 1a2 2 0 0 0-2 2v1h10V3a2 2 0 0 0-2-2H5zm6 8H5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1z"/>
+                        <path d="M0 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2H2a2 2 0 0 1-2-2V7zm2.5 1a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
+                    </svg>
+                    Imprimir
+                </button>
+                <button class="btn btn-outline-primary" onclick="downloadPDF()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                        <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+                    </svg>
+                    Descargar
+                </button>
+                <a href="qr-scanner.html" class="btn btn-outline-success ms-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M3 4.5a.5.5 0 0 1 1 0v3.5h3.5a.5.5 0 0 1 0 1H4a.5.5 0 0 1-.5-.5z"/>
+                        <path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1z"/>
+                        <path d="M10 10.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5zm.5.5h2v2h-2z"/>
+                    </svg>
+                    Escanear QR
+                </a>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Main content -->
+            <div class="col-lg-8">
+                <!-- Assignment info -->
+                <div class="report-card">
+                    <h2 class="mb-3">Detalles de la Asignación</h2>
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <p class="mb-1 text-muted">Cliente</p>
+                            <p class="fw-bold mb-3">Mall San Lucas</p>
+                            
+                            <p class="mb-1 text-muted">Dirección</p>
+                            <p class="mb-3">Cra. 24 Sur, El Poblado, Medellín</p>
+                            
+                            <p class="mb-1 text-muted">Tipo de Alarma</p>
+                            <span class="badge rounded-pill badge-high">Pánico</span>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1 text-muted">Fecha y Hora</p>
+                            <p class="fw-bold mb-3">21/05/2025 14:45</p>
+                            
+                            <p class="mb-1 text-muted">Código Cliente</p>
+                            <p class="mb-3">SL-7890</p>
+                            
+                            <p class="mb-1 text-muted">Prioridad</p>
+                            <span class="badge rounded-pill badge-high">Alta</span>
+                        </div>
+                    </div>
+                    
+                    <div id="map" class="mb-4"></div>
+                    
+                    <h3 class="mb-3">Cronología</h3>
+                    <div class="timeline mb-4">
+                        <div class="timeline-item">
+                            <div class="timeline-dot"></div>
+                            <p class="text-muted mb-1">14:45</p>
+                            <p class="fw-bold mb-1">Asignación Creada</p>
+                            <p class="small text-muted">Se creó la asignación para atender la alarma.</p>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-dot"></div>
+                            <p class="text-muted mb-1">14:47</p>
+                            <p class="fw-bold mb-1">Asignación Aceptada</p>
+                            <p class="small text-muted">El supervisor aceptó la asignación y comenzó a desplazarse.</p>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-dot"></div>
+                            <p class="text-muted mb-1">15:05</p>
+                            <p class="fw-bold mb-1">Llegada al Sitio</p>
+                            <p class="small text-muted">El supervisor llegó al sitio y comenzó la verificación.</p>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-dot"></div>
+                            <p class="text-muted mb-1">15:30</p>
+                            <p class="fw-bold mb-1">Asignación Completada</p>
+                            <p class="small text-muted">La asignación fue completada y el reporte generado.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title text-muted">Tiempo de Aceptación</h5>
+                                    <p class="response-time response-good">2 minutos</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title text-muted">Tiempo de Traslado</h5>
+                                    <p class="response-time response-warning">18 minutos</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title text-muted">Tiempo Total</h5>
+                                    <p class="response-time response-warning">45 minutos</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Report content with tabs -->
+                <div class="report-card">
+                    <h2 class="mb-3">Reporte</h2>
+                    
+                    <ul class="nav nav-pills mb-4" id="reportTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="description-tab" data-bs-toggle="pill" data-bs-target="#description-content" type="button" role="tab" aria-controls="description-content" aria-selected="true">Descripción</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="photos-tab" data-bs-toggle="pill" data-bs-target="#photos-content" type="button" role="tab" aria-controls="photos-content" aria-selected="false">Fotos</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="audio-tab" data-bs-toggle="pill" data-bs-target="#audio-content" type="button" role="tab" aria-controls="audio-content" aria-selected="false">Audio</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="video-tab" data-bs-toggle="pill" data-bs-target="#video-content" type="button" role="tab" aria-controls="video-content" aria-selected="false">Video</button>
+                        </li>
+                    </ul>
+                    
+                    <div class="tab-content" id="reportTabsContent">
+                        <!-- Descripción tab -->
+                        <div class="tab-pane fade show active" id="description-content" role="tabpanel" aria-labelledby="description-tab">
+                            <h4 class="mb-2">Descripción</h4>
+                            <p class="mb-4">
+                                Se verificó la alarma activada en el establecimiento. Se encontró una ventana abierta en la parte trasera del edificio, posiblemente forzada. Se realizó una inspección completa del perímetro y se verificó que no hubiera personas no autorizadas en el interior. El sistema de alarma funcionaba correctamente, pero el sensor de la ventana trasera estaba mal calibrado. Se contactó al cliente para informar de la situación y se aseguró el perímetro.
+                            </p>
+                            
+                            <h4 class="mb-2">Observaciones</h4>
+                            <p class="mb-4">
+                                El cliente solicitó reforzar vigilancia nocturna en la zona trasera del edificio. También mencionó que han tenido intentos previos de intrusión en los últimos 3 meses. El personal de seguridad del cliente no estaba presente durante la inspección.
+                            </p>
+                            
+                            <h4 class="mb-2">Recomendaciones</h4>
+                            <p class="mb-4">
+                                Se recomienda instalar sensores adicionales en todas las ventanas traseras del edificio. Mejorar la iluminación exterior, particularmente en el área de estacionamiento y acceso trasero. Revisar y ajustar la calibración de todos los sensores existentes. Considerar la instalación de cámaras de seguridad adicionales con visión nocturna.
+                            </p>
+                            
+                            <div class="card bg-light mb-4">
+                                <div class="card-body">
+                                    <h4 class="card-title">Contacto en Sitio</h4>
+                                    <p class="mb-1 fw-bold">Juan Pérez</p>
+                                    <p class="text-muted mb-1">Gerente de Seguridad</p>
+                                    <p>+52 555 123 4567</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Fotos tab -->
+                        <div class="tab-pane fade" id="photos-content" role="tabpanel" aria-labelledby="photos-tab">
+                            <h4 class="mb-3">Fotos</h4>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <img src="https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&q=80&w=600&h=400" class="gallery-img" alt="Oficina Exterior" data-bs-toggle="modal" data-bs-target="#imageModal" onclick="showImage(this.src)">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <img src="https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&q=80&w=600&h=400" class="gallery-img" alt="Oficina Interior" data-bs-toggle="modal" data-bs-target="#imageModal" onclick="showImage(this.src)">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <img src="https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&q=80&w=600&h=400" class="gallery-img" alt="Bodega Interior" data-bs-toggle="modal" data-bs-target="#imageModal" onclick="showImage(this.src)">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <img src="https://images.unsplash.com/photo-1580674285054-bed31e145f59?auto=format&fit=crop&q=80&w=600&h=400" class="gallery-img" alt="Área de Almacenamiento" data-bs-toggle="modal" data-bs-target="#imageModal" onclick="showImage(this.src)">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Audio tab -->
+                        <div class="tab-pane fade" id="audio-content" role="tabpanel" aria-labelledby="audio-tab">
+                            <h4 class="mb-3">Grabaciones de Audio</h4>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h5 class="card-title">Nota de voz #1</h5>
+                                            <p class="text-muted mb-2">Descripción inicial del incidente</p>
+                                            <audio controls class="w-100">
+                                                <source src="/ElevenLabs_2025-05-21T18_59_11_Enrique M. Nieto_pvc_sp100_s50_sb75_se0_b_m2.mp3" type="audio/mpeg">
+                                                Tu navegador no soporta el elemento de audio.
+                                            </audio>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h5 class="card-title">Nota de voz #2</h5>
+                                            <p class="text-muted mb-2">Conversación con el cliente</p>
+                                            <audio controls class="w-100">
+                                                <source src="/ElevenLabs_2025-05-21T19_01_29_Enrique M. Nieto_pvc_sp100_s50_sb75_se0_b_m2.mp3" type="audio/mpeg">
+                                                Tu navegador no soporta el elemento de audio.
+                                            </audio>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Video tab -->
+                        <div class="tab-pane fade" id="video-content" role="tabpanel" aria-labelledby="video-tab">
+                            <h4 class="mb-3">Video</h4>
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">Inspección del perímetro</h5>
+                                    <p class="text-muted mb-2">Recorrido por la zona trasera del edificio</p>
+                                    <video controls class="w-100">
+                                        <source src="https://samplelib.com/lib/preview/mp4/sample-5s.mp4" type="video/mp4">
+                                        Tu navegador no soporta el elemento de video.
+                                    </video>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <!-- Supervisor info -->
+                <div class="report-card">
+                    <h3 class="mb-3">Supervisor Asignado</h3>
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="https://i.pravatar.cc/150?img=68" class="rounded-circle me-3" width="60" height="60" alt="Supervisor">
+                        <div>
+                            <h5 class="mb-0">Carlos Rodríguez</h5>
+                            <p class="text-muted mb-0">supervisor1</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Vehicle info -->
+                <div class="report-card">
+                    <h3 class="mb-3">Vehículo Asignado</h3>
+                    <div class="d-flex justify-content-center">
+                        <div>
+                            <!-- Placa de auto con fondo amarillo y letras negras -->
+                            <div style="width: 120px; height: 60px; background-color: #FFCC00; border: 2px solid #000; border-radius: 5px; display: flex; justify-content: center; align-items: center;">
+                                <span style="font-weight: bold; color: #000; font-size: 18px;">ABC-1234</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Status info -->
+                <div class="report-card">
+                    <h3 class="mb-3">Estado y Resultado</h3>
+                    <div class="mb-3">
+                        <p class="text-muted mb-1">Estado</p>
+                        <span class="badge rounded-pill bg-success">Completado</span>
+                    </div>
+                    <div class="mb-3">
+                        <p class="text-muted mb-1">Resultado</p>
+                        <span class="badge rounded-pill badge-low">Solucionado</span>
+                    </div>
+                    <hr>
+                    <div>
+                        <p class="text-muted mb-1">Notas Adicionales</p>
+                        <p>Asignación completada exitosamente.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Image Modal -->
+    <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-body p-0">
+                    <button type="button" class="btn-close position-absolute top-0 end-0 m-3 bg-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <img id="modalImage" src="" class="modal-img d-block mx-auto" alt="Imagen ampliada">
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- QR Scanner Modal -->
+    <div class="modal fade" id="qrScannerModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Escanear Código QR</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="qr-scanner-container">
+                        <!-- Video feed para el escáner -->
+                        <div id="scanner-container" class="position-relative mb-3" style="height: 300px; background-color: #000; border-radius: 8px; overflow: hidden;">
+                            <video id="qr-video" class="w-100 h-100 object-cover" playsinline></video>
+                            <div class="position-absolute top-0 left-0 w-100 h-100 d-flex align-items-center justify-content-center">
+                                <div class="border border-2 border-white opacity-70 rounded" style="width: 200px; height: 200px;"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Mensaje de estado -->
+                        <div id="scan-status" class="alert alert-info mb-3" role="alert">
+                            Posicione el código QR frente a la cámara para escanear
+                        </div>
+                        
+                        <!-- Input manual alternativo -->
+                        <div class="mb-3">
+                            <label for="manual-code" class="form-label">O ingrese el código manualmente:</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="manual-code" placeholder="Ingrese el código">
+                                <button class="btn btn-outline-primary" type="button" onclick="verifyManualCode()">Verificar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Variables para el escáner QR
+        let videoElement;
+        let scannerInterval;
+        let qrScannerModal;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get report ID from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const reportId = urlParams.get('id');
+            if (reportId) {
+                document.getElementById('report-id').textContent = reportId;
+            }
+            
+            // Initialize map centrado en Medellín, Colombia
+            const map = L.map('map').setView([6.2159, -75.5578], 13);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                maxZoom: 19
+            }).addTo(map);
+            
+            // Agregar ubicación inicio (Mall La Frontera)
+            const startPoint = L.marker([6.2707, -75.5868]).addTo(map);
+            startPoint.bindPopup("Mall La Frontera").openPopup();
+            
+            // Agregar ubicación destino (Mall San Lucas)
+            const endPoint = L.marker([6.1813, -75.5594]).addTo(map);
+            endPoint.bindPopup("Mall San Lucas").openPopup();
+            
+            // Simular ruta entre ambos puntos siguiendo calles principales de Medellín
+            const routePoints = [
+                [6.2707, -75.5868], // Inicio (Mall La Frontera)
+                [6.2700, -75.5860], // Salida del mall
+                [6.2650, -75.5850], // Avanza por Calle 77 Sur
+                [6.2600, -75.5830], // Incorporación a Av. Regional
+                [6.2550, -75.5820], // Avanza por Av. Regional
+                [6.2500, -75.5800], // Continúa por Av. Regional
+                [6.2450, -75.5780], // Continúa hacia el sur
+                [6.2400, -75.5760], // Av. Regional cerca del centro
+                [6.2350, -75.5740], // Continúa por Av. Regional
+                [6.2300, -75.5720], // Avanza hacia las Palmas
+                [6.2250, -75.5700], // Incorporación a Av. Las Palmas
+                [6.2200, -75.5680], // Avanza por Av. Las Palmas
+                [6.2150, -75.5670], // Continúa hacia El Poblado
+                [6.2100, -75.5650], // Zona de El Poblado
+                [6.2050, -75.5640], // Avanza hacia el sur
+                [6.2000, -75.5630], // Aproximación a San Lucas
+                [6.1950, -75.5620], // Cerca de Mall San Lucas
+                [6.1900, -75.5610], // Entrada zona San Lucas
+                [6.1850, -75.5600], // Calle hacia Mall San Lucas
+                [6.1813, -75.5594]  // Destino (Mall San Lucas)
+            ];
+            
+            // Agregar iconos personalizados para inicio y fin
+            const baseIcon = L.divIcon({
+                html: '<div style="background-color: #007bff; border: 2px solid white; border-radius: 50%; width: 12px; height: 12px;"></div>',
+                className: 'map-point-icon'
+            });
+            
+            // Agregar marcadores en cada intersección para simular el recorrido por calles
+            for (let i = 1; i < routePoints.length - 1; i++) {
+                L.marker(routePoints[i], {icon: baseIcon}).addTo(map);
+            }
+            
+            // Crear línea de ruta con estilo
+            const routeLine = L.polyline(routePoints, {
+                color: '#0066CC',
+                weight: 4,
+                opacity: 0.8,
+                lineJoin: 'round'
+            }).addTo(map);
+            
+            // Ajustar vista del mapa para mostrar toda la ruta
+            map.fitBounds(routeLine.getBounds(), {padding: [50, 50]});
+            
+            // Inicializar tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+            
+            // Inicializar elementos para el escaneo QR
+            videoElement = document.getElementById('qr-video');
+            
+            // Agregar evento para iniciar la cámara cuando se abre el modal
+            document.getElementById('qrScannerModal').addEventListener('shown.bs.modal', startQRScanner);
+            
+            // Escuchar evento de cierre del modal para detener la cámara
+            document.getElementById('qrScannerModal').addEventListener('hidden.bs.modal', stopQRScanner);
+        });
+        
+        // Función para mostrar imagen ampliada
+        function showImage(src) {
+            document.getElementById('modalImage').src = src;
+        }
+        
+        // Función para descargar PDF
+        function downloadPDF() {
+            alert('Funcionalidad de descarga en PDF en desarrollo.');
+        }
+        
+        // Redirigir a la página independiente del escáner QR
+        function openQRScanner() {
+            window.location.href = 'qr-scanner.html';
+            return true;
+        }
+        
+        // Iniciar escáner QR
+        function startQRScanner() {
+            // Verificar si el navegador soporta acceso a la cámara
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                updateScanStatus('Error: Su navegador no soporta acceso a la cámara', 'alert-danger');
+                return;
+            }
+            
+            // Solicitar permiso para acceder a la cámara
+            navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: 'environment' } 
+            }).then(function(stream) {
+                // Asignar el stream de la cámara al elemento de video
+                videoElement.srcObject = stream;
+                videoElement.play();
+                
+                // Actualizar estado
+                updateScanStatus('Escaneando... Coloque un código QR frente a la cámara', 'alert-info');
+                
+                // Comenzar a escanear en intervalos regulares
+                startQRScanInterval();
+                
+            }).catch(function(error) {
+                console.error('Error al acceder a la cámara:', error);
+                updateScanStatus('Error: No se pudo acceder a la cámara. Verifique los permisos.', 'alert-danger');
+            });
+        }
+        
+        // Detener escáner QR
+        function stopQRScanner() {
+            // Detener el intervalo de escaneo
+            if (scannerInterval) {
+                clearInterval(scannerInterval);
+                scannerInterval = null;
+            }
+            
+            // Detener la cámara
+            if (videoElement && videoElement.srcObject) {
+                const stream = videoElement.srcObject;
+                const tracks = stream.getTracks();
+                tracks.forEach(track => track.stop());
+                videoElement.srcObject = null;
+            }
+        }
+        
+        // Iniciar intervalo para escanear QR
+        function startQRScanInterval() {
+            // Si ya hay un intervalo activo, lo detenemos
+            if (scannerInterval) {
+                clearInterval(scannerInterval);
+            }
+            
+            // En una implementación real, aquí importaríamos una biblioteca de escaneo QR
+            // Para esta demo, simulamos encontrar un código QR después de unos segundos
+            scannerInterval = setInterval(function() {
+                // Simulamos encontrar un código QR
+                const success = Math.random() > 0.7; // 30% de probabilidad de éxito
+                
+                if (success) {
+                    // Detener el escaneo
+                    clearInterval(scannerInterval);
+                    scannerInterval = null;
+                    
+                    // Simulamos un código QR encontrado
+                    const mockQrData = {
+                        clientId: 1234,
+                        clientCode: "SL-7890",
+                        locationCode: "MDE-001",
+                        timestamp: Date.now()
+                    };
+                    
+                    // Actualizar estado
+                    updateScanStatus('¡Código QR detectado! Verificando...', 'alert-success');
+                    
+                    // Procesar el código QR (simular verificación)
+                    setTimeout(function() {
+                        processQRCode(mockQrData);
+                    }, 1500);
+                }
+            }, 2000); // Intentar cada 2 segundos
+        }
+        
+        // Procesar código QR escaneado
+        function processQRCode(qrData) {
+            console.log('Código QR procesado:', qrData);
+            
+            // Verificar si el código QR corresponde al cliente actual
+            if (qrData.clientCode === 'SL-7890') {
+                // Código válido
+                updateScanStatus('¡Verificación exitosa! Cliente confirmado.', 'alert-success');
+                
+                // Cerrar modal después de un tiempo
+                setTimeout(function() {
+                    qrScannerModal.hide();
+                    
+                    // Mostrar alerta de éxito
+                    alert('Cliente verificado correctamente: ' + qrData.clientCode);
+                }, 2000);
+            } else {
+                // Código inválido
+                updateScanStatus('Error: El código QR no corresponde al cliente asignado.', 'alert-danger');
+                
+                // Reiniciar escaneo después de un tiempo
+                setTimeout(function() {
+                    startQRScanInterval();
+                }, 3000);
+            }
+        }
+        
+        // Verificar código ingresado manualmente
+        function verifyManualCode() {
+            const manualCode = document.getElementById('manual-code').value.trim();
+            
+            if (!manualCode) {
+                updateScanStatus('Error: Ingrese un código válido', 'alert-danger');
+                return;
+            }
+            
+            updateScanStatus('Verificando código ingresado...', 'alert-info');
+            
+            // Simular verificación
+            setTimeout(function() {
+                if (manualCode === 'SL-7890') {
+                    updateScanStatus('¡Verificación exitosa! Cliente confirmado.', 'alert-success');
+                    
+                    // Cerrar modal después de un tiempo
+                    setTimeout(function() {
+                        qrScannerModal.hide();
+                        
+                        // Mostrar alerta de éxito
+                        alert('Cliente verificado correctamente: ' + manualCode);
+                    }, 1500);
+                } else {
+                    updateScanStatus('Error: El código ingresado no es válido o no corresponde al cliente asignado.', 'alert-danger');
+                }
+            }, 1500);
+        }
+        
+        // Actualizar mensaje de estado del escáner
+        function updateScanStatus(message, alertClass) {
+            const statusElement = document.getElementById('scan-status');
+            
+            // Eliminar clases de alerta anteriores
+            statusElement.classList.remove('alert-info', 'alert-success', 'alert-danger', 'alert-warning');
+            
+            // Añadir nueva clase de alerta
+            statusElement.classList.add(alertClass);
+            
+            // Actualizar mensaje
+            statusElement.textContent = message;
+        }
+    </script>
+</body>
+</html>
