@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte de Asignación</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #f8f9fa;
+        }
+        .header {
+            padding: 20px 0;
+            border-bottom: 1px solid #dee2e6;
+            margin-bottom: 30px;
+        }
+        .report-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            padding: 20px;
+        }
+        #map {
+            height: 300px;
+            border-radius: 8px;
+        }
+        .gallery-img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .gallery-img:hover {
+            transform: scale(1.03);
+        }
+        .modal-img {
+            max-width: 100%;
+            max-height: 90vh;
+        }
+        .timeline-item {
+            position: relative;
+            padding-left: 30px;
+            padding-bottom: 20px;
+            border-left: 2px solid #dee2e6;
+            margin-left: 15px;
+        }
+        .timeline-item:last-child {
+            border-left: 2px solid transparent;
+        }
+        .timeline-dot {
+            position: absolute;
+            left: -10px;
+            top: 0;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background-color: #0d6efd;
+        }
+        .badge-high {
+            background-color: #dc3545;
+            color: white;
+        }
+        .badge-medium {
+            background-color: #fd7e14;
+            color: white;
+        }
+        .badge-low {
+            background-color: #20c997;
+            color: white;
+        }
+        .response-time {
+            font-weight: bold;
+        }
+        .response-good {
+            color: #198754;
+        }
+        .response-warning {
+            color: #fd7e14;
+        }
+        .response-critical {
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <a href="/supervisor-panel" class="btn btn-outline-secondary me-3">
+                    <i class="bi bi-arrow-left"></i> Volver
+                </a>
+                <h1 class="mb-0">Reporte #<span id="report-id">3</span></h1>
+            </div>
+            <div>
+                <button class="btn btn-outline-primary me-2" onclick="window.print()">
+                    Imprimir
+                </button>
+                <button class="btn btn-outline-primary" onclick="downloadPDF()">
+                    Descargar
+                </button>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Main content -->
+            <div class="col-lg-8">
+                <!-- Assignment info -->
+                <div class="report-card">
+                    <h2 class="mb-3">Detalles de la Asignación</h2>
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <p class="mb-1 text-muted">Cliente</p>
+                            <p class="fw-bold mb-3">Residencial Las Palmas</p>
+                            
+                            <p class="mb-1 text-muted">Dirección</p>
+                            <p class="mb-3">Urbanización Las Palmas, Casa 78</p>
+                            
+                            <p class="mb-1 text-muted">Tipo de Alarma</p>
+                            <span class="badge rounded-pill badge-high">Pánico</span>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1 text-muted">Fecha y Hora</p>
+                            <p class="fw-bold mb-3">18/09/2023 14:45</p>
+                            
+                            <p class="mb-1 text-muted">Código Cliente</p>
+                            <p class="mb-3">C34567</p>
+                            
+                            <p class="mb-1 text-muted">Prioridad</p>
+                            <span class="badge rounded-pill badge-high">Alta</span>
+                        </div>
+                    </div>
+                    
+                    <div id="map" class="mb-4"></div>
+                    
+                    <h3 class="mb-3">Cronología</h3>
+                    <div class="timeline mb-4">
+                        <div class="timeline-item">
+                            <div class="timeline-dot"></div>
+                            <p class="text-muted mb-1">14:45</p>
+                            <p class="fw-bold mb-1">Asignación Creada</p>
+                            <p class="small text-muted">Se creó la asignación para atender la alarma.</p>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-dot"></div>
+                            <p class="text-muted mb-1">14:47</p>
+                            <p class="fw-bold mb-1">Asignación Aceptada</p>
+                            <p class="small text-muted">El supervisor aceptó la asignación y comenzó a desplazarse.</p>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-dot"></div>
+                            <p class="text-muted mb-1">15:05</p>
+                            <p class="fw-bold mb-1">Llegada al Sitio</p>
+                            <p class="small text-muted">El supervisor llegó al sitio y comenzó la verificación.</p>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-dot"></div>
+                            <p class="text-muted mb-1">15:30</p>
+                            <p class="fw-bold mb-1">Asignación Completada</p>
+                            <p class="small text-muted">La asignación fue completada y el reporte generado.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title text-muted">Tiempo de Aceptación</h5>
+                                    <p class="response-time response-good">2 minutos</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title text-muted">Tiempo de Traslado</h5>
+                                    <p class="response-time response-warning">18 minutos</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title text-muted">Tiempo Total</h5>
+                                    <p class="response-time response-warning">45 minutos</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Report content -->
+                <div class="report-card">
+                    <h2 class="mb-3">Reporte</h2>
+                    
+                    <h4 class="mb-2">Descripción</h4>
+                    <p class="mb-4">
+                        Se verificó la alarma activada en el establecimiento. Se encontró una ventana abierta en la parte trasera del edificio, posiblemente forzada. Se realizó una inspección completa del perímetro y se verificó que no hubiera personas no autorizadas en el interior. El sistema de alarma funcionaba correctamente, pero el sensor de la ventana trasera estaba mal calibrado. Se contactó al cliente para informar de la situación y se aseguró el perímetro.
+                    </p>
+                    
+                    <h4 class="mb-2">Observaciones</h4>
+                    <p class="mb-4">
+                        El cliente solicitó reforzar vigilancia nocturna en la zona trasera del edificio. También mencionó que han tenido intentos previos de intrusión en los últimos 3 meses. El personal de seguridad del cliente no estaba presente durante la inspección.
+                    </p>
+                    
+                    <h4 class="mb-2">Recomendaciones</h4>
+                    <p class="mb-4">
+                        Se recomienda instalar sensores adicionales en todas las ventanas traseras del edificio. Mejorar la iluminación exterior, particularmente en el área de estacionamiento y acceso trasero. Revisar y ajustar la calibración de todos los sensores existentes. Considerar la instalación de cámaras de seguridad adicionales con visión nocturna.
+                    </p>
+                    
+                    <div class="card bg-light mb-4">
+                        <div class="card-body">
+                            <h4 class="card-title">Contacto en Sitio</h4>
+                            <p class="mb-1 fw-bold">Juan Pérez</p>
+                            <p class="text-muted mb-1">Gerente de Seguridad</p>
+                            <p>+52 555 123 4567</p>
+                        </div>
+                    </div>
+                    
+                    <h4 class="mb-3">Fotos</h4>
+                    <div class="row mb-4">
+                        <div class="col-md-4 mb-3">
+                            <img src="https://images.unsplash.com/photo-1600359786042-2b1a3e1c5a3b?auto=format&fit=crop&q=80&w=600&h=400" class="gallery-img" alt="Evidencia 1" data-bs-toggle="modal" data-bs-target="#imageModal" onclick="showImage(this.src)">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <img src="https://images.unsplash.com/photo-1621575893235-436d675741d4?auto=format&fit=crop&q=80&w=600&h=400" class="gallery-img" alt="Evidencia 2" data-bs-toggle="modal" data-bs-target="#imageModal" onclick="showImage(this.src)">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <img src="https://images.unsplash.com/photo-1517433456452-f9633a875f6f?auto=format&fit=crop&q=80&w=600&h=400" class="gallery-img" alt="Evidencia 3" data-bs-toggle="modal" data-bs-target="#imageModal" onclick="showImage(this.src)">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <img src="https://images.unsplash.com/photo-1488229297570-58520851e868?auto=format&fit=crop&q=80&w=600&h=400" class="gallery-img" alt="Evidencia 4" data-bs-toggle="modal" data-bs-target="#imageModal" onclick="showImage(this.src)">
+                        </div>
+                    </div>
+                    
+                    <h4 class="mb-3">Grabaciones de Audio</h4>
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">Nota de voz #1</h5>
+                                    <audio controls class="w-100">
+                                        <source src="https://samplelib.com/lib/preview/mp3/sample-3s.mp3" type="audio/mpeg">
+                                        Tu navegador no soporta el elemento de audio.
+                                    </audio>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">Nota de voz #2</h5>
+                                    <audio controls class="w-100">
+                                        <source src="https://samplelib.com/lib/preview/mp3/sample-6s.mp3" type="audio/mpeg">
+                                        Tu navegador no soporta el elemento de audio.
+                                    </audio>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h4 class="mb-3">Video</h4>
+                    <div class="mb-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Inspección del perímetro</h5>
+                                <video controls class="w-100">
+                                    <source src="https://samplelib.com/lib/preview/mp4/sample-5s.mp4" type="video/mp4">
+                                    Tu navegador no soporta el elemento de video.
+                                </video>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <!-- Supervisor info -->
+                <div class="report-card">
+                    <h3 class="mb-3">Supervisor Asignado</h3>
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="https://i.pravatar.cc/150?img=68" class="rounded-circle me-3" width="60" height="60" alt="Supervisor">
+                        <div>
+                            <h5 class="mb-0">Carlos Rodríguez</h5>
+                            <p class="text-muted mb-0">supervisor1</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Vehicle info -->
+                <div class="report-card">
+                    <h3 class="mb-3">Vehículo Asignado</h3>
+                    <div class="d-flex align-items-center">
+                        <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 60px; height: 60px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
+                                <path d="M4 9a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm10 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM6 8a1 1 0 0 0 0 2h4a1 1 0 1 0 0-2H6ZM4.862 4.276 3.906 6.19a.51.51 0 0 0 .497.731c.91-.073.995-.499 1.101-.734.087-.19.158-.373.258-.585l.3-.613.542-1.102c.057-.117.113-.226.175-.334.066-.109.133-.214.203-.313.083-.12.168-.235.258-.343.094-.113.193-.22.296-.318.103-.101.21-.196.32-.285.113-.089.229-.169.348-.241.124-.074.25-.142.38-.201.13-.06.263-.112.398-.154.137-.044.276-.075.417-.101.14-.024.282-.041.425-.041.143 0 .285.017.425.041.14.026.28.057.417.101.135.042.267.094.397.154.131.059.257.127.38.201.119.072.235.152.349.241.11.088.217.183.32.285.103.99.202.205.296.318.09.108.175.223.258.343.7.099.137.204.203.313.062.108.118.217.175.334l.542 1.102.3.613c.1.212.17.394.258.585.106.235.191.661 1.101.734a.51.51 0 0 0 .497-.731l-.956-1.913A.5.5 0 0 0 12.216 4H3.784a.5.5 0 0 0-.447.276ZM2.4 10.055l-.12 1.686a.5.5 0 0 0 .136.395.507.507 0 0 0 .377.13c.116-.004.251-.018.384-.043.132-.025.26-.06.378-.108.117-.048.23-.106.337-.176.106-.072.205-.158.296-.252a1.51 1.51 0 0 0 .212-.276c.063-.095.116-.196.162-.3a1.797 1.797 0 0 0 .097-.313c.024-.107.042-.216.054-.317.012-.1.018-.201.018-.304v-.212a7.46 7.46
+                            </svg>
+                        </div>
+                        <div>
+                            <h5 class="mb-0">PAT-003</h5>
+                            <p class="text-muted mb-0">Placa: ABC-1234</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Status info -->
+                <div class="report-card">
+                    <h3 class="mb-3">Estado y Resultado</h3>
+                    <div class="mb-3">
+                        <p class="text-muted mb-1">Estado</p>
+                        <span class="badge rounded-pill bg-success">Completado</span>
+                    </div>
+                    <div class="mb-3">
+                        <p class="text-muted mb-1">Resultado</p>
+                        <span class="badge rounded-pill badge-low">Solucionado</span>
+                    </div>
+                    <hr>
+                    <div>
+                        <p class="text-muted mb-1">Notas Adicionales</p>
+                        <p>Asignación completada exitosamente.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Image Modal -->
+    <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-body p-0">
+                    <button type="button" class="btn-close position-absolute top-0 end-0 m-3" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <img id="modalImage" src="" class="modal-img d-block mx-auto" alt="Imagen ampliada">
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize map
+            const map = L.map('map').setView([25.6714, -100.3092], 14);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                maxZoom: 19
+            }).addTo(map);
+            
+            const marker = L.marker([25.6714, -100.3092]).addTo(map);
+            marker.bindPopup("Urbanización Las Palmas, Casa 78").openPopup();
+        });
+        
+        function showImage(src) {
+            document.getElementById('modalImage').src = src;
+        }
+        
+        function downloadPDF() {
+            alert('Funcionalidad de descarga en PDF en desarrollo.');
+        }
+    </script>
+</body>
+</html>
