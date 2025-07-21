@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visor de Reportes</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+        }
+        
+        .back-btn {
+            background: none;
+            border: none;
+            display: flex;
+            align-items: center;
+            margin-right: 15px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        
+        .page-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .card-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .card-title svg {
+            margin-right: 8px;
+        }
+        
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-gap: 20px;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            grid-gap: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .detail-item {
+            margin-bottom: 15px;
+        }
+        
+        .detail-label {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        
+        .detail-value {
+            font-weight: 500;
+        }
+        
+        .badge {
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .badge-high {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        
+        .badge-medium {
+            background-color: #fff8e1;
+            color: #ff8f00;
+        }
+        
+        .badge-low {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .badge-completed {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .badge-in-progress {
+            background-color: #e3f2fd;
+            color: #1565c0;
+        }
+        
+        .badge-pending {
+            background-color: #fff8e1;
+            color: #ff8f00;
+        }
+        
+        .mini-map {
+            height: 250px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .address-box {
+            display: flex;
+            align-items: flex-start;
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 5px;
+        }
+        
+        .address-box svg {
+            min-width: 20px;
+            margin-right: 8px;
+            margin-top: 2px;
+        }
+        
+        .timeline {
+            position: relative;
+            margin: 20px 0;
+            padding-left: 30px;
+        }
+        
+        .timeline:before {
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 0;
+            height: 100%;
+            width: 2px;
+            background-color: #e0e0e0;
+        }
+        
+        .timeline-item {
+            position: relative;
+            padding-bottom: 20px;
+        }
+        
+        .timeline-item:last-child {
+            padding-bottom: 0;
+        }
+        
+        .timeline-dot {
+            position: absolute;
+            left: -30px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: #e3f2fd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #90caf9;
+        }
+        
+        .timeline-dot svg {
+            width: 14px;
+            height: 14px;
+            color: #1976d2;
+        }
+        
+        .timeline-time {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 2px;
+        }
+        
+        .timeline-title {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        
+        .timeline-desc {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .response-time-boxes {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .response-time-box {
+            background-color: #e3f2fd;
+            padding: 12px;
+            border-radius: 6px;
+        }
+        
+        .response-time-label {
+            font-size: 13px;
+            color: #1565c0;
+            margin-bottom: 5px;
+        }
+        
+        .response-time-value {
+            font-weight: bold;
+        }
+        
+        .response-time-value.good {
+            color: #2e7d32;
+        }
+        
+        .response-time-value.warning {
+            color: #ff8f00;
+        }
+        
+        .response-time-value.critical {
+            color: #c62828;
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #e0e0e0;
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            font-weight: 500;
+            border-bottom: 2px solid transparent;
+        }
+        
+        .tab.active {
+            border-bottom-color: #1976d2;
+            color: #1976d2;
+        }
+        
+        .tab-content {
+            display: none !important;
+        }
+        
+        .tab-content.active {
+            display: block !important;
+        }
+        
+        .contact-box {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        
+        .contact-title {
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+        
+        .contact-info {
+            display: flex;
+            align-items: flex-start;
+        }
+        
+        .contact-info svg {
+            margin-right: 8px;
+            min-width: 18px;
+            margin-top: 2px;
+        }
+        
+        .contact-detail {
+            font-size: 14px;
+        }
+        
+        .contact-role {
+            font-size: 13px;
+            color: #666;
+        }
+        
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .gallery-item {
+            aspect-ratio: 1;
+            cursor: pointer;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            max-width: 90%;
+            max-height: 90%;
+        }
+        
+        .modal-content img {
+            max-width: 100%;
+            max-height: 90vh;
+            display: block;
+            margin: 0 auto;
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            color: white;
+            font-size: 30px;
+            cursor: pointer;
+        }
+        
+        .audio-player {
+            background-color: #f5f5f5;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .audio-player svg {
+            margin-right: 10px;
+            min-width: 20px;
+        }
+        
+        .audio-player audio {
+            flex-grow: 1;
+        }
+        
+        .video-player {
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        
+        .video-player video {
+            width: 100%;
+            border-radius: 6px;
+        }
+        
+        .user-avatar {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            font-weight: bold;
+            color: #555;
+            overflow: hidden;
+        }
+        
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .user-name {
+            font-weight: 500;
+        }
+        
+        .user-role {
+            font-size: 13px;
+            color: #666;
+        }
+        
+        .vehicle-box {
+            display: flex;
+            align-items: center;
+        }
+        
+        .vehicle-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #e3f2fd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            color: #1976d2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header section -->
+        <div class="header">
+            <div class="header-left">
+                <button class="back-btn" onclick="window.location.href='/supervisor-panel'">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                </button>
+                <h1 class="page-title">Reporte de Asignación #<span id="assignment-id"></span></h1>
+            </div>
+            <div class="action-buttons">
+                <button class="btn btn-outline-secondary btn-sm" onclick="printReport()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                    Imprimir
+                </button>
+                <button class="btn btn-outline-secondary btn-sm" onclick="downloadPDF()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    Descargar
+                </button>
+                <button class="btn btn-outline-secondary btn-sm" onclick="shareReport()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                    Compartir
+                </button>
+            </div>
+        </div>
+
+        <!-- Main content -->
+        <div class="main-content">
+            <!-- Left column -->
+            <div class="left-column">
+                <!-- Assignment summary card -->
+                <div class="card">
+                    <div class="card-title">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ff9800" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                        Asignación #<span id="assignment-number"></span>
+                    </div>
+                    <div class="grid-container">
+                        <div class="detail-item">
+                            <div class="detail-label">Cliente</div>
+                            <div class="detail-value" id="client-name"></div>
+                            <div id="client-code"></div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Tipo de Alarma</div>
+                            <div class="detail-value">
+                                <span class="badge" id="alarm-type-badge"></span>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Prioridad</div>
+                            <div class="detail-value">
+                                <span class="badge" id="priority-badge"></span>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Estado</div>
+                            <div class="detail-value">
+                                <span class="badge badge-completed">Completado</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="map" class="mini-map"></div>
+                    <div class="address-box">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                        <div id="client-address"></div>
+                    </div>
+
+                    <h3 class="mt-4 mb-3 h5">Cronología</h3>
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-dot">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                            </div>
+                            <div class="timeline-time" id="assigned-time"></div>
+                            <div class="timeline-title">Asignación Creada</div>
+                            <div class="timeline-desc">Se creó la asignación para atender la alarma.</div>
+                        </div>
+                        <div class="timeline-item" id="accepted-timeline">
+                            <div class="timeline-dot">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+                            </div>
+                            <div class="timeline-time" id="accepted-time"></div>
+                            <div class="timeline-title">Asignación Aceptada</div>
+                            <div class="timeline-desc">El supervisor aceptó la asignación y comenzó a desplazarse.</div>
+                        </div>
+                        <div class="timeline-item" id="arrived-timeline">
+                            <div class="timeline-dot">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                            </div>
+                            <div class="timeline-time" id="arrived-time"></div>
+                            <div class="timeline-title">Llegada al Sitio</div>
+                            <div class="timeline-desc">El supervisor llegó al sitio y comenzó la verificación.</div>
+                        </div>
+                        <div class="timeline-item" id="completed-timeline">
+                            <div class="timeline-dot">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                            </div>
+                            <div class="timeline-time" id="completed-time"></div>
+                            <div class="timeline-title">Asignación Completada</div>
+                            <div class="timeline-desc">La asignación fue completada y el reporte generado.</div>
+                        </div>
+                    </div>
+
+                    <div class="response-time-boxes">
+                        <div class="response-time-box">
+                            <div class="response-time-label">Tiempo de Aceptación</div>
+                            <div class="response-time-value" id="acceptance-time"></div>
+                        </div>
+                        <div class="response-time-box">
+                            <div class="response-time-label">Tiempo de Traslado</div>
+                            <div class="response-time-value" id="travel-time"></div>
+                        </div>
+                        <div class="response-time-box">
+                            <div class="response-time-label">Tiempo Total</div>
+                            <div class="response-time-value" id="total-time"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Report details with tabs -->
+                <div class="card">
+                    <div class="tabs">
+                        <div class="tab active" data-tab="description">Descripción</div>
+                        <div class="tab" data-tab="photos">Fotos</div>
+                        <div class="tab" data-tab="audio">Audio</div>
+                        <div class="tab" data-tab="video">Video</div>
+                    </div>
+                    
+                    <div class="tab-content active" id="description">
+                        <h3 class="h5 mb-3">Descripción del Reporte</h3>
+                        <p id="report-description" class="text-muted mb-4">
+                            Se verificó la alarma activada en el establecimiento. Se encontró una ventana abierta en la parte trasera del edificio. Se contactó al cliente y se realizó inspección completa.
+                        </p>
+                        
+                        <div id="observations-section">
+                            <h3 class="h5 mb-3">Observaciones</h3>
+                            <p id="report-observations" class="text-muted mb-4">
+                                El cliente solicitó reforzar vigilancia nocturna en la zona trasera.
+                            </p>
+                        </div>
+                        
+                        <div id="recommendations-section">
+                            <h3 class="h5 mb-3">Recomendaciones</h3>
+                            <p id="report-recommendations" class="text-muted mb-4">
+                                Se recomienda instalar sensores adicionales en las ventanas traseras y mejorar iluminación exterior.
+                            </p>
+                        </div>
+                        
+                        <div id="contact-section" class="contact-box">
+                            <div class="contact-title">Contacto en Sitio</div>
+                            <div class="contact-info">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                                <div>
+                                    <div id="contact-name" class="contact-detail">Juan Pérez</div>
+                                    <div id="contact-role" class="contact-role">Gerente de Seguridad</div>
+                                    <div id="contact-phone" class="contact-detail">+52 555 123 4567</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-content" id="photos">
+                        <div class="gallery" id="photos-gallery">
+                            <!-- Images will be dynamically inserted here -->
+                        </div>
+                        <div id="empty-photos" class="text-center p-4 d-none">
+                            <p class="text-muted">No hay imágenes disponibles</p>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-content" id="audio">
+                        <div id="audio-container">
+                            <!-- Audio players will be dynamically inserted here -->
+                        </div>
+                        <div id="empty-audio" class="text-center p-4 d-none">
+                            <p class="text-muted">No hay grabaciones de audio disponibles</p>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-content" id="video">
+                        <div id="video-container">
+                            <!-- Video players will be dynamically inserted here -->
+                        </div>
+                        <div id="empty-video" class="text-center p-4 d-none">
+                            <p class="text-muted">No hay grabaciones de video disponibles</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right column -->
+            <div class="right-column">
+                <!-- Supervisor info card -->
+                <div class="card">
+                    <div class="card-title">Supervisor Asignado</div>
+                    <div class="user-avatar">
+                        <div class="avatar" id="supervisor-avatar">
+                            <img id="supervisor-image" src="" alt="Supervisor" onerror="this.style.display='none'; this.parentNode.textContent='CR';">
+                        </div>
+                        <div class="user-info">
+                            <div class="user-name" id="supervisor-name">Carlos Rodríguez</div>
+                            <div class="user-role" id="supervisor-username">supervisor1</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vehicle info card -->
+                <div class="card">
+                    <div class="card-title">Vehículo Asignado</div>
+                    <div class="vehicle-box">
+                        <div class="vehicle-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="9" width="20" height="8" rx="2"></rect><circle cx="6" cy="17" r="2"></circle><circle cx="18" cy="17" r="2"></circle><path d="M9 17H15"></path><path d="M4 5h16"></path><path d="M4 13h16"></path></svg>
+                        </div>
+                        <div class="user-info">
+                            <div class="user-name" id="vehicle-code">PAT-003</div>
+                            <div class="user-role" id="vehicle-plate">Placa: ABC-1234</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results info card -->
+                <div class="card">
+                    <div class="card-title">Estado y Resultado</div>
+                    <div class="detail-item">
+                        <div class="detail-label">Estado</div>
+                        <div class="detail-value">
+                            <span class="badge badge-completed">Completado</span>
+                        </div>
+                    </div>
+                    <div class="detail-item" id="result-section">
+                        <div class="detail-label">Resultado</div>
+                        <div class="detail-value">
+                            <span class="badge badge-low" id="resolved-status">Solucionado</span>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="detail-item">
+                        <div class="detail-label">Notas Adicionales</div>
+                        <div class="detail-value" id="assignment-notes">
+                            Asignación completada exitosamente.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Modal -->
+    <div id="image-modal" class="modal">
+        <span class="close-modal">&times;</span>
+        <div class="modal-content">
+            <img id="modal-image" src="#" alt="Imagen ampliada">
+        </div>
+    </div>
+
+    <script>
+        // Mock data for development - this would be replaced by actual data from API
+        const mockReport = {
+            id: 1,
+            assignmentId: 1,
+            description: "Se verificó la alarma activada en el establecimiento. Se encontró una ventana abierta en la parte trasera del edificio, posiblemente forzada. Se realizó una inspección completa del perímetro y se verificó que no hubiera personas no autorizadas en el interior. El sistema de alarma funcionaba correctamente, pero el sensor de la ventana trasera estaba mal calibrado. Se contactó al cliente para informar de la situación y se aseguró el perímetro.",
+            photos: [
+                "https://images.unsplash.com/photo-1600359786042-2b1a3e1c5a3b?auto=format&fit=crop&q=80&w=600&h=400",
+                "https://images.unsplash.com/photo-1621575893235-436d675741d4?auto=format&fit=crop&q=80&w=600&h=400",
+                "https://images.unsplash.com/photo-1517433456452-f9633a875f6f?auto=format&fit=crop&q=80&w=600&h=400",
+                "https://images.unsplash.com/photo-1488229297570-58520851e868?auto=format&fit=crop&q=80&w=600&h=400"
+            ],
+            videos: [
+                "https://samplelib.com/lib/preview/mp4/sample-5s.mp4"
+            ],
+            audio: [
+                "https://samplelib.com/lib/preview/mp3/sample-3s.mp3",
+                "https://samplelib.com/lib/preview/mp3/sample-6s.mp3"
+            ],
+            resolvedStatus: "Solucionado",
+            responseTime: 18,
+            createdAt: "2023-09-18T15:30:00Z",
+            contactPerson: "Juan Pérez",
+            contactRole: "Gerente de Seguridad",
+            contactPhone: "+52 555 123 4567",
+            observations: "El cliente solicitó reforzar vigilancia nocturna en la zona trasera del edificio. También mencionó que han tenido intentos previos de intrusión en los últimos 3 meses. El personal de seguridad del cliente no estaba presente durante la inspección.",
+            recommendations: "Se recomienda instalar sensores adicionales en todas las ventanas traseras del edificio. Mejorar la iluminación exterior, particularmente en el área de estacionamiento y acceso trasero. Revisar y ajustar la calibración de todos los sensores existentes. Considerar la instalación de cámaras de seguridad adicionales con visión nocturna."
+        };
+
+        const mockAssignment = {
+            id: 3,
+            patrolId: 3,
+            supervisorId: 995,
+            alarmId: 1003,
+            dispatcherId: 44,
+            assignedAt: "2023-09-18T14:45:00Z",
+            acceptedAt: "2023-09-18T14:47:00Z",
+            arrivedAt: "2023-09-18T15:05:00Z",
+            completedAt: "2023-09-18T15:30:00Z",
+            status: "completed",
+            notes: "Asignación completada exitosamente",
+            alarmType: "panic",
+            priority: "high",
+            clientName: "Residencial Las Palmas",
+            clientId: "C34567",
+            clientCode: "C34567",
+            address: "Urbanización Las Palmas, Casa 78",
+            coordinates: {
+                lat: 25.6714, 
+                lng: -100.3092
+            }
+        };
+
+        const mockSupervisor = {
+            id: 995,
+            username: "supervisor1",
+            firstName: "Carlos",
+            lastName: "Rodríguez",
+            role: "supervisor",
+            profileImageUrl: "https://i.pravatar.cc/150?img=68"
+        };
+
+        const mockPatrol = {
+            id: 3,
+            vehicleCode: "PAT-003",
+            licensePlate: "ABC-1234",
+            status: "available"
+        };
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get assignment ID from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const assignmentId = urlParams.get('id') || 3; // Default to 3 if not specified
+            
+            // Fetch data (for now using mock data)
+            loadAssignmentData(assignmentId);
+            setupTabsNavigation();
+            setupImageModal();
+        });
+
+        function loadAssignmentData(assignmentId) {
+            // In a real app, this would fetch from the API
+            // For now, using mock data
+            
+            // Set basic assignment details
+            document.getElementById('assignment-id').textContent = assignmentId;
+            document.getElementById('assignment-number').textContent = assignmentId;
+            document.getElementById('client-name').textContent = mockAssignment.clientName;
+            document.getElementById('client-code').textContent = mockAssignment.clientCode;
+            document.getElementById('client-address').textContent = mockAssignment.address;
+            
+            // Set alarm type badge
+            const alarmTypeBadge = document.getElementById('alarm-type-badge');
+            alarmTypeBadge.textContent = getAlarmTypeName(mockAssignment.alarmType);
+            alarmTypeBadge.className = 'badge badge-' + getAlarmTypeSeverity(mockAssignment.alarmType);
+            
+            // Set priority badge
+            const priorityBadge = document.getElementById('priority-badge');
+            priorityBadge.textContent = getPriorityName(mockAssignment.priority);
+            priorityBadge.className = 'badge badge-' + mockAssignment.priority;
+            
+            // Set timeline times
+            document.getElementById('assigned-time').textContent = formatTime(mockAssignment.assignedAt);
+            
+            if (mockAssignment.acceptedAt) {
+                document.getElementById('accepted-time').textContent = formatTime(mockAssignment.acceptedAt);
+            } else {
+                document.getElementById('accepted-timeline').style.display = 'none';
+            }
+            
+            if (mockAssignment.arrivedAt) {
+                document.getElementById('arrived-time').textContent = formatTime(mockAssignment.arrivedAt);
+            } else {
+                document.getElementById('arrived-timeline').style.display = 'none';
+            }
+            
+            if (mockAssignment.completedAt) {
+                document.getElementById('completed-time').textContent = formatTime(mockAssignment.completedAt);
+            } else {
+                document.getElementById('completed-timeline').style.display = 'none';
+            }
+            
+            // Set response time values
+            const acceptanceTime = calculateTimeDifference(mockAssignment.assignedAt, mockAssignment.acceptedAt);
+            const travelTime = calculateTimeDifference(mockAssignment.acceptedAt, mockAssignment.arrivedAt);
+            const totalTime = calculateTimeDifference(mockAssignment.assignedAt, mockAssignment.completedAt);
+            
+            const acceptanceTimeEl = document.getElementById('acceptance-time');
+            acceptanceTimeEl.textContent = acceptanceTime + ' minutos';
+            acceptanceTimeEl.className = 'response-time-value ' + getTimeClass(acceptanceTime);
+            
+            const travelTimeEl = document.getElementById('travel-time');
+            travelTimeEl.textContent = travelTime + ' minutos';
+            travelTimeEl.className = 'response-time-value ' + getTimeClass(travelTime);
+            
+            const totalTimeEl = document.getElementById('total-time');
+            totalTimeEl.textContent = totalTime + ' minutos';
+            totalTimeEl.className = 'response-time-value ' + getTimeClass(totalTime, 60);
+            
+            // Set report details
+            document.getElementById('report-description').textContent = mockReport.description;
+            
+            if (mockReport.observations) {
+                document.getElementById('report-observations').textContent = mockReport.observations;
+            } else {
+                document.getElementById('observations-section').style.display = 'none';
+            }
+            
+            if (mockReport.recommendations) {
+                document.getElementById('report-recommendations').textContent = mockReport.recommendations;
+            } else {
+                document.getElementById('recommendations-section').style.display = 'none';
+            }
+            
+            if (mockReport.contactPerson) {
+                document.getElementById('contact-name').textContent = mockReport.contactPerson;
+                if (mockReport.contactRole) {
+                    document.getElementById('contact-role').textContent = mockReport.contactRole;
+                }
+                if (mockReport.contactPhone) {
+                    document.getElementById('contact-phone').textContent = mockReport.contactPhone;
+                }
+            } else {
+                document.getElementById('contact-section').style.display = 'none';
+            }
+            
+            // Load photos gallery
+            const photosGallery = document.getElementById('photos-gallery');
+            const emptyPhotos = document.getElementById('empty-photos');
+            
+            if (mockReport.photos && mockReport.photos.length > 0) {
+                mockReport.photos.forEach(function(photo, index) {
+                    const galleryItem = document.createElement('div');
+                    galleryItem.className = 'gallery-item';
+                    const img = document.createElement('img');
+                    img.src = photo;
+                    img.alt = `Evidencia ${index + 1}`;
+                    img.onclick = function() { openModal(photo); };
+                    galleryItem.appendChild(img);
+                    photosGallery.appendChild(galleryItem);
+                });
+                emptyPhotos.classList.add('d-none');
+            } else {
+                photosGallery.classList.add('d-none');
+                emptyPhotos.classList.remove('d-none');
+            }
+            
+            // Load audio players
+            const audioContainer = document.getElementById('audio-container');
+            const emptyAudio = document.getElementById('empty-audio');
+            
+            if (mockReport.audio && mockReport.audio.length > 0) {
+                mockReport.audio.forEach(function(audioUrl, index) {
+                    const audioPlayer = document.createElement('div');
+                    audioPlayer.className = 'audio-player';
+                    audioPlayer.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"></path><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path></svg>
+                        <audio controls>
+                            <source src="${audioUrl}" type="audio/mpeg">
+                            Tu navegador no soporta el elemento de audio.
+                        </audio>
+                    `;
+                    audioContainer.appendChild(audioPlayer);
+                });
+                emptyAudio.classList.add('d-none');
+            } else {
+                audioContainer.classList.add('d-none');
+                emptyAudio.classList.remove('d-none');
+            }
+            
+            // Load video players
+            const videoContainer = document.getElementById('video-container');
+            const emptyVideo = document.getElementById('empty-video');
+            
+            if (mockReport.videos && mockReport.videos.length > 0) {
+                mockReport.videos.forEach(function(videoUrl, index) {
+                    const videoPlayer = document.createElement('div');
+                    videoPlayer.className = 'video-player';
+                    videoPlayer.innerHTML = `
+                        <video controls>
+                            <source src="${videoUrl}" type="video/mp4">
+                            Tu navegador no soporta el elemento de video.
+                        </video>
+                    `;
+                    videoContainer.appendChild(videoPlayer);
+                });
+                emptyVideo.classList.add('d-none');
+            } else {
+                videoContainer.classList.add('d-none');
+                emptyVideo.classList.remove('d-none');
+            }
+            
+            // Set supervisor details
+            document.getElementById('supervisor-name').textContent = `${mockSupervisor.firstName} ${mockSupervisor.lastName}`;
+            document.getElementById('supervisor-username').textContent = mockSupervisor.username;
+            if (mockSupervisor.profileImageUrl) {
+                document.getElementById('supervisor-image').src = mockSupervisor.profileImageUrl;
+            }
+            
+            // Set vehicle details
+            document.getElementById('vehicle-code').textContent = mockPatrol.vehicleCode;
+            document.getElementById('vehicle-plate').textContent = `Placa: ${mockPatrol.licensePlate}`;
+            
+            // Set result details
+            if (mockReport.resolvedStatus) {
+                document.getElementById('resolved-status').textContent = mockReport.resolvedStatus;
+            } else {
+                document.getElementById('result-section').style.display = 'none';
+            }
+            
+            document.getElementById('assignment-notes').textContent = mockAssignment.notes || 'No hay notas adicionales.';
+            
+            // Initialize the map
+            initMap(mockAssignment.coordinates.lat, mockAssignment.coordinates.lng, mockAssignment.address);
+        }
+
+        function initMap(lat, lng, address) {
+            const map = L.map('map').setView([lat, lng], 15);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                maxZoom: 19
+            }).addTo(map);
+            
+            const marker = L.marker([lat, lng]).addTo(map);
+            marker.bindPopup(address).openPopup();
+        }
+
+        function setupTabsNavigation() {
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // Remove active class from all tabs
+                    tabs.forEach(t => t.classList.remove('active'));
+                    
+                    // Add active class to clicked tab
+                    tab.classList.add('active');
+                    
+                    // Hide all tab contents
+                    const tabContents = document.querySelectorAll('.tab-content');
+                    tabContents.forEach(content => content.classList.remove('active'));
+                    
+                    // Show the selected tab content
+                    const tabId = tab.getAttribute('data-tab');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+        }
+
+        function setupImageModal() {
+            const modal = document.getElementById('image-modal');
+            const closeBtn = document.querySelector('.close-modal');
+            
+            closeBtn.addEventListener('click', () => {
+                modal.style.display = 'none';
+            });
+            
+            window.addEventListener('click', (event) => {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        }
+
+        function openModal(imgSrc) {
+            const modal = document.getElementById('image-modal');
+            const modalImg = document.getElementById('modal-image');
+            
+            if (modal && modalImg) {
+                modal.style.display = 'flex';
+                modalImg.src = imgSrc;
+            } else {
+                console.error("Modal elements not found");
+            }
+        }
+
+        function formatTime(timeString) {
+            const date = new Date(timeString);
+            return date.toLocaleTimeString('es-ES', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function calculateTimeDifference(startTime, endTime) {
+            if (!startTime || !endTime) return 0;
+            
+            const start = new Date(startTime);
+            const end = new Date(endTime);
+            const diffMs = end - start;
+            
+            return Math.round(diffMs / (1000 * 60));
+        }
+
+        function getTimeClass(minutes, threshold = 30) {
+            if (minutes <= threshold / 2) return 'good';
+            if (minutes <= threshold) return 'warning';
+            return 'critical';
+        }
+
+        function getAlarmTypeName(type) {
+            const types = {
+                'intrusion': 'Intrusión',
+                'fire': 'Incendio',
+                'panic': 'Pánico',
+                'revista_programada': 'Revista Programada',
+                'revista_rutina': 'Revista Rutina',
+                'other': 'Otro'
+            };
+            
+            return types[type] || type;
+        }
+
+        function getAlarmTypeSeverity(type) {
+            const severities = {
+                'intrusion': 'high',
+                'fire': 'high',
+                'panic': 'high',
+                'revista_programada': 'medium',
+                'revista_rutina': 'medium',
+                'other': 'low'
+            };
+            
+            return severities[type] || 'medium';
+        }
+
+        function getPriorityName(priority) {
+            const priorities = {
+                'high': 'Alta',
+                'critical': 'Crítica',
+                'medium': 'Media',
+                'low': 'Baja'
+            };
+            
+            return priorities[priority] || priority;
+        }
+
+        function printReport() {
+            window.print();
+        }
+
+        function downloadPDF() {
+            alert('Funcionalidad de descarga en formato PDF en desarrollo.');
+        }
+
+        function shareReport() {
+            if (navigator.share) {
+                navigator.share({
+                    title: `Reporte de asignación #${document.getElementById('assignment-id').textContent}`,
+                    text: `Reporte de la asignación #${document.getElementById('assignment-id').textContent} - ${document.getElementById('client-name').textContent}`,
+                    url: window.location.href
+                }).catch(error => console.log('Error compartiendo', error));
+            } else {
+                alert('Tu navegador no soporta la funcionalidad de compartir.');
+            }
+        }
+    </script>
+</body>
+</html>
