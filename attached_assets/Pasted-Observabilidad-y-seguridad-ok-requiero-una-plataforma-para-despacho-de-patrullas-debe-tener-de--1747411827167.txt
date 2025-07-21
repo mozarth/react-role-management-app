@@ -1,0 +1,12 @@
+Observabilidad y seguridad
+
+ok requiero una plataforma para despacho de patrullas 
+debe tener de escitorio y app segun el rol , 
+debe tener un lolgin con usuario y clave , este lo debe proporcinar el administrador o el director 
+debe tener los siguientes roles administrador, director, operador de alarmas, despachador de patrullas y supervisor motorizado
+el rol de administrador es el control total , asiga usuarios y claves, saca reportes , ve dasshboard, elimina usuarios,etc
+el rol de director asiga usuario y claves elimina usuarios , saca reportes ve dashboard ve las paginas de operador y despachador y supervisor, ve lass pestañas de que ve el operador de alarmas y debe tener una seccion donde pueda genear los turnos para los operadores de alarma, y puede ver los turnos de los supervisores motorizados 
+el rol de operador de alarmas , envia informacion para el despachador de que alarma se disparo, el numero ID de cliente la razon social, direccion , enlace de goglemaps
+el rol de despachador solo puede ver la pagina de despachador y de supervisor debe poder elegir al supervisor y despacharlo segun lo que le indique el operador de alarmas este debe recibir en tiempo real lo que el operador gestiono en su pagina y asi poder determinar a que supervisor envia y debe tener una seccion donde pueda generar los turnos para esos supervisores 
+el rol de supervisor motorizado , a el le debe lleagr la informacion que genero el operador de alarma y que el despachador le haya asignado , este supervisor se deb loguear en la app del celuar con usuario clave y rostro ,una vez tiene esa informacion que ya avalo el despachador debe iniciar un contador de tiempo el cual se dbe detener una vez el con la app haya leido un codigo qr que estas fijo en la direccion del cliente , debe podere tomar fotos y videoclipde maximo 30 segundos , asi como de poder escribir alguna nota,la gestion se finaliza una vez este envie la informacion requerida fotos , video y nota 
+ademas en la pagina de operador debe tener unas pestañas que lo debe  dirigir al whatsapp web que ya esta ejecutando o lo lleve paar ingrese , asi mismo a la pagina de monitoreo de alarmas y otra para monitoreo de vehiculos, tambien debe tener una pestaña que lo lleve a ver los turnos asiganos por el director para sepan que dia tine que trabajr en que turno 
